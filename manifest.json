@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-granola-merger",
+  "name": "Granola Notes & Transcript Merger",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Seamlessly merge and copy/save Granola meeting notes and transcripts.",
+  "author": "Antigravity",
+  "authorUrl": "https://github.com/google",
+  "isDesktopOnly": false
+}

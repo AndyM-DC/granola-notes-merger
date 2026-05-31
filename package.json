@@ -1,0 +1,21 @@
+{
+  "name": "obsidian-granola-merger",
+  "version": "1.0.0",
+  "description": "Seamlessly merge meeting notes and transcripts from Granola.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": [],
+  "author": "Antigravity",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "0.19.11",
+    "obsidian": "^1.5.0",
+    "typescript": "^5.0.0"
+  }
+}
