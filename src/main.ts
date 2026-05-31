@@ -30,7 +30,7 @@ export default class GranolaMergerPlugin extends Plugin {
         await this.loadSettings();
 
         // Add Ribbon Icon for quick UI trigger
-        this.addRibbonIcon('document-merge', 'Merge Notes & Transcript', (evt: MouseEvent) => {
+        this.addRibbonIcon('document-merge', 'Merge Notes and Transcript', (evt: MouseEvent) => {
             const activeFile = this.app.workspace.getActiveFile();
             if (activeFile) {
                 const transcriptFile = this.resolveTranscriptFile(activeFile);
@@ -60,7 +60,7 @@ export default class GranolaMergerPlugin extends Plugin {
         // Command 2: Copy Notes & Transcript to Clipboard
         this.addCommand({
             id: 'copy-notes-transcript-clipboard',
-            name: 'Copy Notes & Transcript to Clipboard',
+            name: 'Copy Notes and Transcript to Clipboard',
             checkCallback: (checking: boolean) => {
                 const activeFile = this.app.workspace.getActiveFile();
                 if (activeFile) {
@@ -314,7 +314,7 @@ class MergerMenuModal extends Modal {
 
         // Header
         const headerEl = contentEl.createDiv({ cls: "granola-merger-header" });
-        headerEl.createEl("h2", { text: "Merge Notes & Transcript", cls: "granola-merger-title" });
+        headerEl.createEl("h2", { text: "Merge Notes and Transcript", cls: "granola-merger-title" });
         headerEl.createDiv({ text: "Quickly combine meeting notes and transcripts for easy pasting or archiving.", cls: "granola-merger-subtitle" });
 
         // Status Container
@@ -432,7 +432,7 @@ class GranolaMergerSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl("h2", { text: "Granola Notes & Transcript Merger Settings" });
+        containerEl.createEl("h2", { text: "Granola Notes and Transcript Merger Settings" });
 
         new Setting(containerEl)
             .setName("Default Action")

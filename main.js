@@ -38,7 +38,7 @@ var DEFAULT_SETTINGS = {
 var GranolaMergerPlugin = class extends import_obsidian.Plugin {
   async onload() {
     await this.loadSettings();
-    this.addRibbonIcon("document-merge", "Merge Notes & Transcript", (evt) => {
+    this.addRibbonIcon("document-merge", "Merge Notes and Transcript", (evt) => {
       const activeFile = this.app.workspace.getActiveFile();
       if (activeFile) {
         const transcriptFile = this.resolveTranscriptFile(activeFile);
@@ -64,7 +64,7 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
     });
     this.addCommand({
       id: "copy-notes-transcript-clipboard",
-      name: "Copy Notes & Transcript to Clipboard",
+      name: "Copy Notes and Transcript to Clipboard",
       checkCallback: (checking) => {
         const activeFile = this.app.workspace.getActiveFile();
         if (activeFile) {
@@ -258,7 +258,7 @@ var MergerMenuModal = class _MergerMenuModal extends import_obsidian.Modal {
     contentEl.empty();
     contentEl.addClass("granola-merger-modal");
     const headerEl = contentEl.createDiv({ cls: "granola-merger-header" });
-    headerEl.createEl("h2", { text: "Merge Notes & Transcript", cls: "granola-merger-title" });
+    headerEl.createEl("h2", { text: "Merge Notes and Transcript", cls: "granola-merger-title" });
     headerEl.createDiv({ text: "Quickly combine meeting notes and transcripts for easy pasting or archiving.", cls: "granola-merger-subtitle" });
     const statusContainer = contentEl.createDiv({ cls: "granola-merger-status-container" });
     const notesCard = statusContainer.createDiv({ cls: "granola-merger-card" });
@@ -348,7 +348,7 @@ var GranolaMergerSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Granola Notes & Transcript Merger Settings" });
+    containerEl.createEl("h2", { text: "Granola Notes and Transcript Merger Settings" });
     new import_obsidian.Setting(containerEl).setName("Default Action").setDesc("Choose what happens when you run the merger command directly on an active note.").addDropdown(
       (dropdown) => dropdown.addOption("menu", "Show Interactive Merger Menu").addOption("copy", "Directly Copy Combined to Clipboard").addOption("save", "Directly Create Combined Note").setValue(this.plugin.settings.defaultAction).onChange(async (value) => {
         this.plugin.settings.defaultAction = value;
