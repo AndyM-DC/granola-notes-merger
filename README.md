@@ -1,4 +1,4 @@
-# Granola Notes & Transcript Merger
+# Granola Notes and Transcript Merger
 
 Seamlessly merge and copy/save Granola AI meeting notes and transcripts in your Obsidian vault.
 
@@ -19,19 +19,19 @@ Once installed, there are three main ways to trigger the plugin:
 
 1. **Ribbon Icon**: Click the document-merge icon (overlapping sheets) on the left sidebar to open the interactive dashboard.
 2. **Command Palette**: Press `Ctrl + P` (or `Cmd + P` on Mac) and search for:
-   - `Granola Notes & Transcript Merger: Open Interactive Merger Menu`
-   - `Granola Notes & Transcript Merger: Copy Notes & Transcript to Clipboard`
-   - `Granola Notes & Transcript Merger: Create Combined Note`
-3. **Fully Automated Mode**: Go to Settings > Granola Notes & Transcript Merger, set the **Default Action** to *Directly Copy* or *Directly Create Note*, and map it to a hotkey for single-keystroke execution.
+   - `Granola Notes and Transcript Merger: Open Interactive Merger Menu`
+   - `Granola Notes and Transcript Merger: Copy Notes and Transcript to Clipboard`
+   - `Granola Notes and Transcript Merger: Create Combined Note`
+3. **Fully Automated Mode**: Go to Settings > Granola Notes and Transcript Merger, set the **Default Action** to *Directly Copy* or *Directly Create Note*, and map it to a hotkey for single-keystroke execution.
 
 ## 🚀 Installation
 
 ### Community Directory (Recommended)
-Search for **Granola Notes & Transcript Merger** in Obsidian's **Settings > Community Plugins > Browse** and click install.
+Search for **Granola Notes and Transcript Merger** in Obsidian's **Settings > Community Plugins > Browse** and click install.
 
 ### Manual Installation
-1. Go to the [Releases](https://github.com/) page and download `main.js`, `manifest.json`, and `styles.css`.
-2. Move these three files to your vault's plugin directory: `<vault>/.obsidian/plugins/obsidian-granola-merger/`.
+1. Go to the [Releases](https://github.com/AndyM-DC/granola-notes-merger/releases) page and download `main.js`, `manifest.json`, and `styles.css`.
+2. Move these three files to your vault's plugin directory: `<vault>/.obsidian/plugins/granola-notes-merger/`.
 3. Reload plugins and enable it in Obsidian settings.
 
 ## 📄 License

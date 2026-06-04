@@ -1,4 +1,4 @@
-/* Custom CSS for Obsidian Granola Notes & Transcript Merger */
+/* Custom CSS for Granola Notes and Transcript Merger */
 
 .granola-merger-modal {
     max-width: 600px;
@@ -91,9 +91,10 @@
     text-align: center;
 }
 
-.granola-merger-btn-primary {
+.granola-merger-btn.granola-merger-btn-primary {
     background: linear-gradient(135deg, var(--interactive-accent) 0%, #9333ea 100%);
-    color: white !important;
+    --text-normal: white;
+    color: white;
 }
 
 .granola-merger-btn-primary:hover {
