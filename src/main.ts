@@ -23,6 +23,13 @@ const DEFAULT_SETTINGS: GranolaMergerSettings = {
     autoOpenCombined: true
 };
 
+/**
+ * Extracts a readable message from a caught value of unknown type.
+ */
+function getErrorMessage(e: unknown): string {
+    return e instanceof Error ? e.message : String(e);
+}
+
 export default class GranolaMergerPlugin extends Plugin {
     settings!: GranolaMergerSettings;
 
@@ -67,12 +74,12 @@ export default class GranolaMergerPlugin extends Plugin {
                     if (!checking) {
                         const transcriptFile = this.resolveTranscriptFile(activeFile);
                         if (transcriptFile) {
-                            this.copyCombinedToClipboard(activeFile, transcriptFile);
+                            void this.copyCombinedToClipboard(activeFile, transcriptFile);
                         } else {
                             // If no transcript found automatically, prompt with selector
                             new Notice('No transcript found automatically. Please select it.');
                             new TranscriptSelectionModal(this.app, this, activeFile, (selectedFile) => {
-                                this.copyCombinedToClipboard(activeFile, selectedFile);
+                                void this.copyCombinedToClipboard(activeFile, selectedFile);
                             }).open();
                         }
                     }
@@ -92,12 +99,12 @@ export default class GranolaMergerPlugin extends Plugin {
                     if (!checking) {
                         const transcriptFile = this.resolveTranscriptFile(activeFile);
                         if (transcriptFile) {
-                            this.createCombinedNote(activeFile, transcriptFile);
+                            void this.createCombinedNote(activeFile, transcriptFile);
                         } else {
                             // If no transcript found automatically, prompt with selector
                             new Notice('No transcript found automatically. Please select it.');
                             new TranscriptSelectionModal(this.app, this, activeFile, (selectedFile) => {
-                                this.createCombinedNote(activeFile, selectedFile);
+                                void this.createCombinedNote(activeFile, selectedFile);
                             }).open();
                         }
                     }
@@ -116,7 +123,8 @@ export default class GranolaMergerPlugin extends Plugin {
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        const data = (await this.loadData()) as Partial<GranolaMergerSettings> | null;
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
     }
 
     async saveSettings() {
@@ -133,7 +141,7 @@ export default class GranolaMergerPlugin extends Plugin {
         if (cache?.frontmatter) {
             for (const key of Object.keys(cache.frontmatter)) {
                 if (key.toLowerCase().includes('transcript')) {
-                    const val = cache.frontmatter[key];
+                    const val: unknown = cache.frontmatter[key];
                     if (typeof val === 'string') {
                         // Clean wikilink formats like [[File]] or [[File|Display]]
                         const cleanVal = val.replace(/^\[\[/, '').replace(/\]\]$/, '').split('|')[0].trim();
@@ -198,7 +206,7 @@ export default class GranolaMergerPlugin extends Plugin {
             await navigator.clipboard.writeText(merged);
             new Notice('📋 Notes & Transcript merged and copied to clipboard!');
         } catch (e) {
-            new Notice('❌ Failed to copy to clipboard: ' + (e as any).message);
+            new Notice('❌ Failed to copy to clipboard: ' + getErrorMessage(e));
             console.error(e);
         }
     }
@@ -237,7 +245,7 @@ export default class GranolaMergerPlugin extends Plugin {
                 await leaf.openFile(targetFile);
             }
         } catch (e) {
-            new Notice('❌ Failed to create combined note: ' + (e as any).message);
+            new Notice('❌ Failed to create combined note: ' + getErrorMessage(e));
             console.error(e);
         }
     }
@@ -345,14 +353,15 @@ class MergerMenuModal extends Modal {
         });
         if (!this.transcriptFile) {
             copyBtn.setAttribute("disabled", "true");
-            copyBtn.style.opacity = "0.5";
-            copyBtn.style.cursor = "not-allowed";
+            copyBtn.addClass("granola-merger-btn-disabled");
         } else {
-            copyBtn.addEventListener("click", async () => {
-                if (this.transcriptFile) {
-                    await this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile);
-                    this.close();
-                }
+            copyBtn.addEventListener("click", () => {
+                void (async () => {
+                    if (this.transcriptFile) {
+                        await this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile);
+                        this.close();
+                    }
+                })();
             });
         }
 
@@ -363,14 +372,15 @@ class MergerMenuModal extends Modal {
         });
         if (!this.transcriptFile) {
             saveBtn.setAttribute("disabled", "true");
-            saveBtn.style.opacity = "0.5";
-            saveBtn.style.cursor = "not-allowed";
+            saveBtn.addClass("granola-merger-btn-disabled");
         } else {
-            saveBtn.addEventListener("click", async () => {
-                if (this.transcriptFile) {
-                    await this.plugin.createCombinedNote(this.activeFile, this.transcriptFile);
-                    this.close();
-                }
+            saveBtn.addEventListener("click", () => {
+                void (async () => {
+                    if (this.transcriptFile) {
+                        await this.plugin.createCombinedNote(this.activeFile, this.transcriptFile);
+                        this.close();
+                    }
+                })();
             });
         }
 
@@ -391,7 +401,7 @@ class MergerMenuModal extends Modal {
         previewHeader.createSpan({ text: "Live Preview of Combined Markdown" });
         const previewBox = contentEl.createDiv({ cls: "granola-merger-preview-box", text: "Loading preview..." });
 
-        this.loadPreview(previewBox);
+        void this.loadPreview(previewBox);
     }
 
     async loadPreview(previewBox: HTMLElement) {
@@ -407,7 +417,7 @@ class MergerMenuModal extends Modal {
             const merged = this.plugin.mergeContent(notesText, transcriptText);
             previewBox.setText(merged);
         } catch (e) {
-            previewBox.setText("Error loading preview: " + (e as any).message);
+            previewBox.setText("Error loading preview: " + getErrorMessage(e));
         }
     }
 
@@ -432,7 +442,9 @@ class GranolaMergerSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl("h2", { text: "Granola Notes and Transcript Merger Settings" });
+        new Setting(containerEl)
+            .setName("Granola Notes and Transcript Merger settings")
+            .setHeading();
 
         new Setting(containerEl)
             .setName("Default Action")

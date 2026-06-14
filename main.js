@@ -35,6 +35,9 @@ var DEFAULT_SETTINGS = {
   filenameSuffix: " (Combined)",
   autoOpenCombined: true
 };
+function getErrorMessage(e) {
+  return e instanceof Error ? e.message : String(e);
+}
 var GranolaMergerPlugin = class extends import_obsidian.Plugin {
   async onload() {
     await this.loadSettings();
@@ -71,11 +74,11 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
           if (!checking) {
             const transcriptFile = this.resolveTranscriptFile(activeFile);
             if (transcriptFile) {
-              this.copyCombinedToClipboard(activeFile, transcriptFile);
+              void this.copyCombinedToClipboard(activeFile, transcriptFile);
             } else {
               new import_obsidian.Notice("No transcript found automatically. Please select it.");
               new TranscriptSelectionModal(this.app, this, activeFile, (selectedFile) => {
-                this.copyCombinedToClipboard(activeFile, selectedFile);
+                void this.copyCombinedToClipboard(activeFile, selectedFile);
               }).open();
             }
           }
@@ -93,11 +96,11 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
           if (!checking) {
             const transcriptFile = this.resolveTranscriptFile(activeFile);
             if (transcriptFile) {
-              this.createCombinedNote(activeFile, transcriptFile);
+              void this.createCombinedNote(activeFile, transcriptFile);
             } else {
               new import_obsidian.Notice("No transcript found automatically. Please select it.");
               new TranscriptSelectionModal(this.app, this, activeFile, (selectedFile) => {
-                this.createCombinedNote(activeFile, selectedFile);
+                void this.createCombinedNote(activeFile, selectedFile);
               }).open();
             }
           }
@@ -111,7 +114,8 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
   onunload() {
   }
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const data = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
   }
   async saveSettings() {
     await this.saveData(this.settings);
@@ -175,7 +179,7 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
       await navigator.clipboard.writeText(merged);
       new import_obsidian.Notice("\u{1F4CB} Notes & Transcript merged and copied to clipboard!");
     } catch (e) {
-      new import_obsidian.Notice("\u274C Failed to copy to clipboard: " + e.message);
+      new import_obsidian.Notice("\u274C Failed to copy to clipboard: " + getErrorMessage(e));
       console.error(e);
     }
   }
@@ -207,7 +211,7 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
         await leaf.openFile(targetFile);
       }
     } catch (e) {
-      new import_obsidian.Notice("\u274C Failed to create combined note: " + e.message);
+      new import_obsidian.Notice("\u274C Failed to create combined note: " + getErrorMessage(e));
       console.error(e);
     }
   }
@@ -279,14 +283,15 @@ var MergerMenuModal = class _MergerMenuModal extends import_obsidian.Modal {
     });
     if (!this.transcriptFile) {
       copyBtn.setAttribute("disabled", "true");
-      copyBtn.style.opacity = "0.5";
-      copyBtn.style.cursor = "not-allowed";
+      copyBtn.addClass("granola-merger-btn-disabled");
     } else {
-      copyBtn.addEventListener("click", async () => {
-        if (this.transcriptFile) {
-          await this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile);
-          this.close();
-        }
+      copyBtn.addEventListener("click", () => {
+        void (async () => {
+          if (this.transcriptFile) {
+            await this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile);
+            this.close();
+          }
+        })();
       });
     }
     const saveBtn = actionGrid.createEl("button", {
@@ -295,14 +300,15 @@ var MergerMenuModal = class _MergerMenuModal extends import_obsidian.Modal {
     });
     if (!this.transcriptFile) {
       saveBtn.setAttribute("disabled", "true");
-      saveBtn.style.opacity = "0.5";
-      saveBtn.style.cursor = "not-allowed";
+      saveBtn.addClass("granola-merger-btn-disabled");
     } else {
-      saveBtn.addEventListener("click", async () => {
-        if (this.transcriptFile) {
-          await this.plugin.createCombinedNote(this.activeFile, this.transcriptFile);
-          this.close();
-        }
+      saveBtn.addEventListener("click", () => {
+        void (async () => {
+          if (this.transcriptFile) {
+            await this.plugin.createCombinedNote(this.activeFile, this.transcriptFile);
+            this.close();
+          }
+        })();
       });
     }
     const changeBtn = actionGrid.createEl("button", {
@@ -318,7 +324,7 @@ var MergerMenuModal = class _MergerMenuModal extends import_obsidian.Modal {
     const previewHeader = contentEl.createDiv({ cls: "granola-merger-preview-header" });
     previewHeader.createSpan({ text: "Live Preview of Combined Markdown" });
     const previewBox = contentEl.createDiv({ cls: "granola-merger-preview-box", text: "Loading preview..." });
-    this.loadPreview(previewBox);
+    void this.loadPreview(previewBox);
   }
   async loadPreview(previewBox) {
     try {
@@ -332,7 +338,7 @@ var MergerMenuModal = class _MergerMenuModal extends import_obsidian.Modal {
       const merged = this.plugin.mergeContent(notesText, transcriptText);
       previewBox.setText(merged);
     } catch (e) {
-      previewBox.setText("Error loading preview: " + e.message);
+      previewBox.setText("Error loading preview: " + getErrorMessage(e));
     }
   }
   onClose() {
@@ -348,7 +354,7 @@ var GranolaMergerSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Granola Notes and Transcript Merger Settings" });
+    new import_obsidian.Setting(containerEl).setName("Granola Notes and Transcript Merger settings").setHeading();
     new import_obsidian.Setting(containerEl).setName("Default Action").setDesc("Choose what happens when you run the merger command directly on an active note.").addDropdown(
       (dropdown) => dropdown.addOption("menu", "Show Interactive Merger Menu").addOption("copy", "Directly Copy Combined to Clipboard").addOption("save", "Directly Create Combined Note").setValue(this.plugin.settings.defaultAction).onChange(async (value) => {
         this.plugin.settings.defaultAction = value;
