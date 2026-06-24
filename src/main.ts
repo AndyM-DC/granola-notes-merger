@@ -37,7 +37,7 @@ export default class GranolaMergerPlugin extends Plugin {
         await this.loadSettings();
 
         // Add Ribbon Icon for quick UI trigger
-        this.addRibbonIcon('document-merge', 'Merge Notes and Transcript', (evt: MouseEvent) => {
+        this.addRibbonIcon('document-merge', 'Merge Notes and Transcript', (_evt: MouseEvent) => {
             const activeFile = this.app.workspace.getActiveFile();
             if (activeFile) {
                 const transcriptFile = this.resolveTranscriptFile(activeFile);
@@ -64,7 +64,7 @@ export default class GranolaMergerPlugin extends Plugin {
             }
         });
 
-        // Command 2: Copy Notes & Transcript to Clipboard
+        // Command 2: Copy Notes and Transcript to Clipboard
         this.addCommand({
             id: 'copy-notes-transcript-clipboard',
             name: 'Copy Notes and Transcript to Clipboard',
@@ -76,7 +76,6 @@ export default class GranolaMergerPlugin extends Plugin {
                         if (transcriptFile) {
                             void this.copyCombinedToClipboard(activeFile, transcriptFile);
                         } else {
-                            // If no transcript found automatically, prompt with selector
                             new Notice('No transcript found automatically. Please select it.');
                             new TranscriptSelectionModal(this.app, this, activeFile, (selectedFile) => {
                                 void this.copyCombinedToClipboard(activeFile, selectedFile);
@@ -101,7 +100,6 @@ export default class GranolaMergerPlugin extends Plugin {
                         if (transcriptFile) {
                             void this.createCombinedNote(activeFile, transcriptFile);
                         } else {
-                            // If no transcript found automatically, prompt with selector
                             new Notice('No transcript found automatically. Please select it.');
                             new TranscriptSelectionModal(this.app, this, activeFile, (selectedFile) => {
                                 void this.createCombinedNote(activeFile, selectedFile);
@@ -136,7 +134,7 @@ export default class GranolaMergerPlugin extends Plugin {
      */
     resolveTranscriptFile(activeFile: TFile): TFile | null {
         const cache = this.app.metadataCache.getFileCache(activeFile);
-        
+
         // 1. Check YAML frontmatter for any key containing "transcript"
         if (cache?.frontmatter) {
             for (const key of Object.keys(cache.frontmatter)) {
@@ -151,7 +149,7 @@ export default class GranolaMergerPlugin extends Plugin {
                 }
             }
         }
-        
+
         // 2. Check inline links/embeds in the document that contain "transcript"
         const allLinks = [...(cache?.links || []), ...(cache?.embeds || [])];
         for (const link of allLinks) {
@@ -162,11 +160,11 @@ export default class GranolaMergerPlugin extends Plugin {
                 if (file) return file;
             }
         }
-        
+
         // 3. Fallback: Search the entire vault for files sharing a prefix or suffix name
         const activeBaseName = activeFile.basename;
         const files = this.app.vault.getMarkdownFiles();
-        
+
         const candidates = files.filter(f => {
             if (f.path === activeFile.path) return false;
             const name = f.basename.toLowerCase();
@@ -176,11 +174,11 @@ export default class GranolaMergerPlugin extends Plugin {
                 (name.includes(base) || base.includes(name.replace('transcript', '').trim()))
             );
         });
-        
+
         if (candidates.length > 0) {
             return candidates[0];
         }
-        
+
         return null;
     }
 
@@ -200,13 +198,13 @@ export default class GranolaMergerPlugin extends Plugin {
         try {
             const notesText = await this.app.vault.cachedRead(notesFile);
             const transcriptText = await this.app.vault.cachedRead(transcriptFile);
-            
+
             const merged = this.mergeContent(notesText, transcriptText);
-            
+
             await navigator.clipboard.writeText(merged);
-            new Notice('📋 Notes & Transcript merged and copied to clipboard!');
-        } catch (e) {
-            new Notice('❌ Failed to copy to clipboard: ' + getErrorMessage(e));
+            new Notice('Notes and Transcript merged and copied to clipboard!');
+        } catch (e: unknown) {
+            new Notice('Failed to copy to clipboard: ' + getErrorMessage(e));
             console.error(e);
         }
     }
@@ -218,12 +216,12 @@ export default class GranolaMergerPlugin extends Plugin {
         try {
             const notesText = await this.app.vault.cachedRead(notesFile);
             const transcriptText = await this.app.vault.cachedRead(transcriptFile);
-            
+
             const mergedContent = this.mergeContent(notesText, transcriptText);
-            
+
             const suffix = this.settings.filenameSuffix || ' (Combined)';
             const parentPath = notesFile.parent ? notesFile.parent.path : '';
-            
+
             let newPath = '';
             if (parentPath === '/' || parentPath === '') {
                 newPath = `${notesFile.basename}${suffix}.md`;
@@ -238,14 +236,15 @@ export default class GranolaMergerPlugin extends Plugin {
                 targetFile = await this.app.vault.create(newPath, mergedContent);
             }
 
-            new Notice(`✍️ Combined note created: ${targetFile.name}`);
-
-            if (this.settings.autoOpenCombined && targetFile instanceof TFile) {
-                const leaf = this.app.workspace.getLeaf(true);
-                await leaf.openFile(targetFile);
+            if (targetFile instanceof TFile) {
+                new Notice(`Combined note created: ${targetFile.name}`);
+                if (this.settings.autoOpenCombined) {
+                    const leaf = this.app.workspace.getLeaf(true);
+                    await leaf.openFile(targetFile);
+                }
             }
-        } catch (e) {
-            new Notice('❌ Failed to create combined note: ' + getErrorMessage(e));
+        } catch (e: unknown) {
+            new Notice('Failed to create combined note: ' + getErrorMessage(e));
             console.error(e);
         }
     }
@@ -270,23 +269,23 @@ class TranscriptSelectionModal extends FuzzySuggestModal<TFile> {
     getItems(): TFile[] {
         const files = this.app.vault.getMarkdownFiles();
         const activeBase = this.activeFile.basename.toLowerCase();
-        
+
         // Sort files to put candidates first
         return files
             .filter(f => f.path !== this.activeFile.path)
             .sort((a, b) => {
                 const nameA = a.basename.toLowerCase();
                 const nameB = b.basename.toLowerCase();
-                
+
                 let scoreA = 0;
                 let scoreB = 0;
-                
+
                 if (nameA.includes('transcript')) scoreA += 5;
                 if (nameB.includes('transcript')) scoreB += 5;
-                
+
                 if (nameA.includes(activeBase) || activeBase.includes(nameA.replace('transcript', '').trim())) scoreA += 10;
                 if (nameB.includes(activeBase) || activeBase.includes(nameB.replace('transcript', '').trim())) scoreB += 10;
-                
+
                 return scoreB - scoreA;
             });
     }
@@ -295,7 +294,7 @@ class TranscriptSelectionModal extends FuzzySuggestModal<TFile> {
         return `${item.basename} (${item.path})`;
     }
 
-    onChooseItem(item: TFile, evt: MouseEvent | KeyboardEvent): void {
+    onChooseItem(item: TFile, _evt: MouseEvent | KeyboardEvent): void {
         this.onSelect(item);
     }
 }
@@ -349,45 +348,43 @@ class MergerMenuModal extends Modal {
         // Copy Button
         const copyBtn = actionGrid.createEl("button", {
             cls: "granola-merger-btn granola-merger-btn-primary",
-            text: "📋 Copy to Clipboard"
+            text: "Copy to Clipboard"
         });
         if (!this.transcriptFile) {
-            copyBtn.setAttribute("disabled", "true");
+            copyBtn.disabled = true;
             copyBtn.addClass("granola-merger-btn-disabled");
         } else {
             copyBtn.addEventListener("click", () => {
-                void (async () => {
-                    if (this.transcriptFile) {
-                        await this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile);
+                if (this.transcriptFile) {
+                    void this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile).then(() => {
                         this.close();
-                    }
-                })();
+                    });
+                }
             });
         }
 
         // Save Button
         const saveBtn = actionGrid.createEl("button", {
             cls: "granola-merger-btn granola-merger-btn-primary",
-            text: "✍️ Create Combined Note"
+            text: "Create Combined Note"
         });
         if (!this.transcriptFile) {
-            saveBtn.setAttribute("disabled", "true");
+            saveBtn.disabled = true;
             saveBtn.addClass("granola-merger-btn-disabled");
         } else {
             saveBtn.addEventListener("click", () => {
-                void (async () => {
-                    if (this.transcriptFile) {
-                        await this.plugin.createCombinedNote(this.activeFile, this.transcriptFile);
+                if (this.transcriptFile) {
+                    void this.plugin.createCombinedNote(this.activeFile, this.transcriptFile).then(() => {
                         this.close();
-                    }
-                })();
+                    });
+                }
             });
         }
 
         // Change Transcript Button
         const changeBtn = actionGrid.createEl("button", {
             cls: "granola-merger-btn granola-merger-btn-secondary granola-merger-btn-full",
-            text: "🔍 Select / Change Transcript File"
+            text: "Select / Change Transcript File"
         });
         changeBtn.addEventListener("click", () => {
             this.close();
@@ -413,10 +410,10 @@ class MergerMenuModal extends Modal {
             } else {
                 transcriptText = "_[No transcript content. Please select a transcript file.]_";
             }
-            
+
             const merged = this.plugin.mergeContent(notesText, transcriptText);
             previewBox.setText(merged);
-        } catch (e) {
+        } catch (e: unknown) {
             previewBox.setText("Error loading preview: " + getErrorMessage(e));
         }
     }
@@ -484,7 +481,7 @@ class GranolaMergerSettingTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName("Separator & Combination Template")
+            .setName("Separator and Combination Template")
             .setDesc("Customize the format of the merged document. Use {{notes}} and {{transcript}} as placeholders.")
             .addTextArea(text => text
                 .setPlaceholder("{{notes}}\n\n---\n# Transcript\n\n{{transcript}}")

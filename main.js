@@ -41,7 +41,7 @@ function getErrorMessage(e) {
 var GranolaMergerPlugin = class extends import_obsidian.Plugin {
   async onload() {
     await this.loadSettings();
-    this.addRibbonIcon("document-merge", "Merge Notes and Transcript", (evt) => {
+    this.addRibbonIcon("document-merge", "Merge Notes and Transcript", (_evt) => {
       const activeFile = this.app.workspace.getActiveFile();
       if (activeFile) {
         const transcriptFile = this.resolveTranscriptFile(activeFile);
@@ -177,9 +177,9 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
       const transcriptText = await this.app.vault.cachedRead(transcriptFile);
       const merged = this.mergeContent(notesText, transcriptText);
       await navigator.clipboard.writeText(merged);
-      new import_obsidian.Notice("\u{1F4CB} Notes & Transcript merged and copied to clipboard!");
+      new import_obsidian.Notice("Notes and Transcript merged and copied to clipboard!");
     } catch (e) {
-      new import_obsidian.Notice("\u274C Failed to copy to clipboard: " + getErrorMessage(e));
+      new import_obsidian.Notice("Failed to copy to clipboard: " + getErrorMessage(e));
       console.error(e);
     }
   }
@@ -205,13 +205,15 @@ var GranolaMergerPlugin = class extends import_obsidian.Plugin {
       } else {
         targetFile = await this.app.vault.create(newPath, mergedContent);
       }
-      new import_obsidian.Notice(`\u270D\uFE0F Combined note created: ${targetFile.name}`);
-      if (this.settings.autoOpenCombined && targetFile instanceof import_obsidian.TFile) {
-        const leaf = this.app.workspace.getLeaf(true);
-        await leaf.openFile(targetFile);
+      if (targetFile instanceof import_obsidian.TFile) {
+        new import_obsidian.Notice(`Combined note created: ${targetFile.name}`);
+        if (this.settings.autoOpenCombined) {
+          const leaf = this.app.workspace.getLeaf(true);
+          await leaf.openFile(targetFile);
+        }
       }
     } catch (e) {
-      new import_obsidian.Notice("\u274C Failed to create combined note: " + getErrorMessage(e));
+      new import_obsidian.Notice("Failed to create combined note: " + getErrorMessage(e));
       console.error(e);
     }
   }
@@ -246,7 +248,7 @@ var TranscriptSelectionModal = class extends import_obsidian.FuzzySuggestModal {
   getItemText(item) {
     return `${item.basename} (${item.path})`;
   }
-  onChooseItem(item, evt) {
+  onChooseItem(item, _evt) {
     this.onSelect(item);
   }
 };
@@ -279,41 +281,39 @@ var MergerMenuModal = class _MergerMenuModal extends import_obsidian.Modal {
     const actionGrid = contentEl.createDiv({ cls: "granola-merger-action-grid" });
     const copyBtn = actionGrid.createEl("button", {
       cls: "granola-merger-btn granola-merger-btn-primary",
-      text: "\u{1F4CB} Copy to Clipboard"
+      text: "Copy to Clipboard"
     });
     if (!this.transcriptFile) {
-      copyBtn.setAttribute("disabled", "true");
+      copyBtn.disabled = true;
       copyBtn.addClass("granola-merger-btn-disabled");
     } else {
       copyBtn.addEventListener("click", () => {
-        void (async () => {
-          if (this.transcriptFile) {
-            await this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile);
+        if (this.transcriptFile) {
+          void this.plugin.copyCombinedToClipboard(this.activeFile, this.transcriptFile).then(() => {
             this.close();
-          }
-        })();
+          });
+        }
       });
     }
     const saveBtn = actionGrid.createEl("button", {
       cls: "granola-merger-btn granola-merger-btn-primary",
-      text: "\u270D\uFE0F Create Combined Note"
+      text: "Create Combined Note"
     });
     if (!this.transcriptFile) {
-      saveBtn.setAttribute("disabled", "true");
+      saveBtn.disabled = true;
       saveBtn.addClass("granola-merger-btn-disabled");
     } else {
       saveBtn.addEventListener("click", () => {
-        void (async () => {
-          if (this.transcriptFile) {
-            await this.plugin.createCombinedNote(this.activeFile, this.transcriptFile);
+        if (this.transcriptFile) {
+          void this.plugin.createCombinedNote(this.activeFile, this.transcriptFile).then(() => {
             this.close();
-          }
-        })();
+          });
+        }
       });
     }
     const changeBtn = actionGrid.createEl("button", {
       cls: "granola-merger-btn granola-merger-btn-secondary granola-merger-btn-full",
-      text: "\u{1F50D} Select / Change Transcript File"
+      text: "Select / Change Transcript File"
     });
     changeBtn.addEventListener("click", () => {
       this.close();
@@ -373,7 +373,7 @@ var GranolaMergerSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("Separator & Combination Template").setDesc("Customize the format of the merged document. Use {{notes}} and {{transcript}} as placeholders.").addTextArea(
+    new import_obsidian.Setting(containerEl).setName("Separator and Combination Template").setDesc("Customize the format of the merged document. Use {{notes}} and {{transcript}} as placeholders.").addTextArea(
       (text) => text.setPlaceholder("{{notes}}\n\n---\n# Transcript\n\n{{transcript}}").setValue(this.plugin.settings.separatorTemplate).onChange(async (value) => {
         this.plugin.settings.separatorTemplate = value;
         await this.plugin.saveSettings();
