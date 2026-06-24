@@ -1,6 +1,6 @@
 {
   "name": "granola-notes-merger",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Seamlessly merge meeting notes and transcripts from Granola.",
   "main": "main.js",
   "type": "module",

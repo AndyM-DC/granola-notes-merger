@@ -354,7 +354,6 @@ var GranolaMergerSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("General").setHeading();
     new import_obsidian.Setting(containerEl).setName("Default Action").setDesc("Choose what happens when you run the merger command directly on an active note.").addDropdown(
       (dropdown) => dropdown.addOption("menu", "Show Interactive Merger Menu").addOption("copy", "Directly Copy Combined to Clipboard").addOption("save", "Directly Create Combined Note").setValue(this.plugin.settings.defaultAction).onChange(async (value) => {
         this.plugin.settings.defaultAction = value;
