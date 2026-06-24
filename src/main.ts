@@ -440,7 +440,7 @@ class GranolaMergerSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName("Granola Notes and Transcript Merger settings")
+            .setName("General")
             .setHeading();
 
         new Setting(containerEl)
